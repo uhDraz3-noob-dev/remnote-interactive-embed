@@ -1,0 +1,26 @@
+{
+  "manifestVersion": 1,
+  "id": "interactive-embed",
+  "name": "Interactive Embed",
+  "author": "Usman",
+  "repoUrl": "https://github.com/uhDraz3-noob-dev/remnote-interactive-embed",
+  "version": {
+    "major": 0,
+    "minor": 1,
+    "patch": 0
+  },
+  "theme": [],
+  "enableOnMobile": true,
+  "description": "Paste interactive HTML, CSS, and JavaScript embeds directly beneath a Rem.",
+  "requestNative": false,
+  "requiredScopes": [
+    {
+      "type": "All",
+      "level": "Read"
+    },
+    {
+      "type": "FocusedSubtree",
+      "level": "ReadCreateModify"
+    }
+  ]
+}
