@@ -6,8 +6,9 @@ import {
   useRunAsync,
   WidgetLocation,
 } from '@remnote/plugin-sdk';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP, TITLE_SLOT } from '../constants';
+import { makeDocument } from '../embed-document';
 import '../style.css';
 import '../index.css';
 
@@ -27,30 +28,6 @@ function normalizeTitle(value: string): string {
   return value.trim().slice(0, MAX_TITLE_LENGTH) || DEFAULT_TITLE;
 }
 
-function makeDocument(embedCode: string): string {
-  if (/^\s*(<!doctype\s+html|<html[\s>])/i.test(embedCode)) {
-    return embedCode;
-  }
-
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    * { box-sizing: border-box; }
-    html, body { width: 100%; min-height: 100%; }
-    body { margin: 0; overflow: auto; -webkit-text-size-adjust: 100%; }
-    img, svg, canvas, video, iframe { max-width: 100%; }
-    button, input, select, textarea { font: inherit; }
-  </style>
-</head>
-<body>
-${embedCode}
-</body>
-</html>`;
-}
-
 export function InteractiveEmbed() {
   const plugin = usePlugin();
   const context = useRunAsync(
@@ -67,6 +44,24 @@ export function InteractiveEmbed() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [status, setStatus] = useState('');
+  const [isLarge, setIsLarge] = useState(false);
+  const [runId, setRunId] = useState(0);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const visibleRef = useRef(true);
+  const notifyVisibility = useCallback(() => {
+    frameRef.current?.contentWindow?.postMessage({ type: 'interactive-embed-visibility-v1', visible: visibleRef.current }, '*');
+  }, []);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(([entry]) => {
+      visibleRef.current = entry.isIntersecting;
+      notifyVisibility();
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, [isRunning, isCollapsed, isEditing, runId, notifyVisibility]);
 
   const loadEmbed = useCallback(async () => {
     if (!context?.remId) return;
@@ -99,7 +94,10 @@ export function InteractiveEmbed() {
     loadEmbed();
   });
 
-  const previewDocument = useMemo(() => makeDocument(savedCode), [savedCode]);
+  const previewDocument = useMemo(
+    () => isRunning && !isCollapsed && !isEditing ? makeDocument(savedCode) : '',
+    [savedCode, isRunning, isCollapsed, isEditing]
+  );
 
   const save = async () => {
     if (!context?.remId) return;
@@ -157,6 +155,20 @@ export function InteractiveEmbed() {
         </div>
 
         <div className="interactive-embed-actions">
+          {!isEditing && isRunning && !isCollapsed && (
+            <>
+              <button className="interactive-embed-icon-button" type="button"
+                aria-label="Restart interactive" title="Restart interactive"
+                onClick={() => setRunId((value) => value + 1)}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" /></svg>
+              </button>
+              <button className="interactive-embed-icon-button" type="button"
+                aria-label={isLarge ? 'Restore display height' : 'Larger view'} title={isLarge ? 'Restore display height' : 'Larger view'}
+                aria-pressed={isLarge} onClick={() => setIsLarge((value) => !value)}>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" /></svg>
+              </button>
+            </>
+          )}
           {!isEditing && isRunning && (
             <button
               className="interactive-embed-button interactive-embed-button--quiet"
@@ -259,7 +271,7 @@ export function InteractiveEmbed() {
             </button>
           </div>
           <p id="interactive-embed-help" className="interactive-embed-help">
-            Paste a self-contained snippet. For your safety, it will wait for you to press Run.
+            Paste your interactive code, save, then press Run. Diagrams, simulations, games, and touch controls are supported.
           </p>
         </div>
       ) : !isCollapsed && !isRunning ? (
@@ -297,10 +309,13 @@ export function InteractiveEmbed() {
         </div>
       ) : !isCollapsed ? (
         <iframe
+          ref={frameRef}
+          onLoad={notifyVisibility}
+          key={runId}
           className="interactive-embed-frame"
           title="Interactive RemNote embed"
           srcDoc={previewDocument}
-          style={{ height: `${savedHeight}px` }}
+          style={{ height: `${isLarge ? Math.max(savedHeight, 800) : savedHeight}px` }}
           sandbox="allow-scripts allow-presentation"
           allow="fullscreen; picture-in-picture"
           loading="lazy"

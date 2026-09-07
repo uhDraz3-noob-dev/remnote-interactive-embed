@@ -22,6 +22,7 @@ body {
  * the measured content in sandboxed and native rendering modes.
  */
 .interactive-embed-stage {
+  box-sizing: border-box;
   width: 100%;
   padding: 10px;
 }
@@ -381,6 +382,7 @@ body {
   }
 
   .interactive-embed-toolbar {
+    flex-wrap: wrap;
     min-height: 54px;
     padding: 7px 8px 7px 10px;
   }
@@ -388,6 +390,11 @@ body {
   .interactive-embed-logo {
     width: 32px;
     height: 32px;
+  }
+
+  .interactive-embed-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
   }
 
   .interactive-embed-button {

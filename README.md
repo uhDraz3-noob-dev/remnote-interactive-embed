@@ -14,6 +14,12 @@ Repository: https://github.com/uhDraz3-noob-dev/remnote-interactive-embed
 
 The code does not need to be a complete HTML page. The plugin automatically wraps ordinary embed code.
 
+The built-in Interactive Embed v1 toolkit supports coordinated state/Reset, touch dragging, animation timing, and responsive Canvas rendering. SVG, CSS animations, and ordinary browser JavaScript are also available. Use **Restart** to reset the entire running frame and **Larger view** for an 800px-or-taller viewport. Uncaught script errors display inside the interactive.
+
+For performance, code is prepared only on Run. Toolkit animations run at up to 30 updates/second and pause when hidden or offscreen. Stop and Collapse remove the running frame. Arbitrary pasted code can bypass these helpers; the sandbox is not a CPU limit. Keep embeds small and run only the simulations you are using.
+
+The [v1 authoring contract](docs/interactive-embed-v1.md) documents the toolkit. Try the [spring lab](examples/spring-lab.html) by pasting its code and setting the height to 620px. The companion skill is in [skills/remnote-interactive-builder](skills/remnote-interactive-builder/SKILL.md). It includes the shared runtime in generated snippets for portability. No new language installation or external library is needed.
+
 ## A useful ChatGPT prompt
 
 > Create a self-contained interactive HTML embed that teaches [YOUR CONCEPT]. Include all HTML, CSS, and JavaScript in one snippet. Do not use Markdown code fences, external libraries, or separate files. Make it responsive and suitable for a 700-pixel-wide embedded note. Return only the embed code.

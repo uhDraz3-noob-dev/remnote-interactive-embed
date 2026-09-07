@@ -41,8 +41,10 @@ const config = {
   },
   module: {
     rules: [
+      { test: /\.runtime\.js$/, type: 'asset/source' },
       {
         test: /\.(ts|tsx|jsx|js)?$/,
+        exclude: /\.runtime\.js$/,
         loader: 'esbuild-loader',
         options: {
           loader: 'tsx',

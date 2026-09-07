@@ -1,0 +1,4 @@
+interface:
+  display_name: "RemNote Interactive Builder"
+  short_description: "Create paste-ready interactive concept embeds"
+  default_prompt: "Use $remnote-interactive-builder to turn the concept we just discussed into a responsive RemNote interactive."

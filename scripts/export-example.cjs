@@ -1,0 +1,10 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const destination = process.argv[2];
+if (!destination) throw new Error('Provide an output HTML path');
+const root = path.join(__dirname, '..');
+const runtime = fs.readFileSync(path.join(root, 'src/runtime/interactive.runtime.js'), 'utf8');
+const example = fs.readFileSync(path.join(root, 'examples/spring-lab.html'), 'utf8');
+const portable = example.replace('<script>', '<script>\n' + runtime + '\n</script>\n<script>');
+fs.writeFileSync(destination, '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spring Lab</title><style>body{margin:0;background:#111a2e}</style></head><body>\n' + portable + '\n</body></html>');
+console.log('Exported portable example:', destination);
