@@ -7,18 +7,24 @@ import {
   WidgetLocation,
 } from '@remnote/plugin-sdk';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP } from '../constants';
+import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP, TITLE_SLOT } from '../constants';
 import '../style.css';
 import '../index.css';
 
 const DEFAULT_HEIGHT = 420;
 const MIN_HEIGHT = 180;
 const MAX_HEIGHT = 1200;
+const DEFAULT_TITLE = 'Interactive Embed';
+const MAX_TITLE_LENGTH = 80;
 
 function normalizeHeight(value: string | number): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return DEFAULT_HEIGHT;
   return Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(parsed)));
+}
+
+function normalizeTitle(value: string): string {
+  return value.trim().slice(0, MAX_TITLE_LENGTH) || DEFAULT_TITLE;
 }
 
 function makeDocument(embedCode: string): string {
@@ -53,6 +59,8 @@ export function InteractiveEmbed() {
   );
   const [savedCode, setSavedCode] = useState('');
   const [draftCode, setDraftCode] = useState('');
+  const [savedTitle, setSavedTitle] = useState(DEFAULT_TITLE);
+  const [draftTitle, setDraftTitle] = useState(DEFAULT_TITLE);
   const [savedHeight, setSavedHeight] = useState(DEFAULT_HEIGHT);
   const [draftHeight, setDraftHeight] = useState(DEFAULT_HEIGHT);
   const [isEditing, setIsEditing] = useState(false);
@@ -65,15 +73,19 @@ export function InteractiveEmbed() {
     const rem = await plugin.rem.findOne(context.remId);
     if (!rem) return;
 
-    const [code, height] = await Promise.all([
+    const [code, height, title] = await Promise.all([
       rem.getPowerupProperty(INTERACTIVE_EMBED_POWERUP, CODE_SLOT),
       rem.getPowerupProperty(INTERACTIVE_EMBED_POWERUP, HEIGHT_SLOT),
+      rem.getPowerupProperty(INTERACTIVE_EMBED_POWERUP, TITLE_SLOT),
     ]);
 
     const nextCode = code || '';
     const nextHeight = normalizeHeight(height || DEFAULT_HEIGHT);
+    const nextTitle = normalizeTitle(title || DEFAULT_TITLE);
     setSavedCode(nextCode);
     setDraftCode(nextCode);
+    setSavedTitle(nextTitle);
+    setDraftTitle(nextTitle);
     setSavedHeight(nextHeight);
     setDraftHeight(nextHeight);
     setIsRunning(false);
@@ -95,12 +107,16 @@ export function InteractiveEmbed() {
     if (!rem) return;
 
     const cleanHeight = normalizeHeight(draftHeight);
+    const cleanTitle = normalizeTitle(draftTitle);
     await Promise.all([
       rem.setPowerupProperty(INTERACTIVE_EMBED_POWERUP, CODE_SLOT, [draftCode]),
       rem.setPowerupProperty(INTERACTIVE_EMBED_POWERUP, HEIGHT_SLOT, [String(cleanHeight)]),
+      rem.setPowerupProperty(INTERACTIVE_EMBED_POWERUP, TITLE_SLOT, [cleanTitle]),
     ]);
 
     setSavedCode(draftCode);
+    setSavedTitle(cleanTitle);
+    setDraftTitle(cleanTitle);
     setSavedHeight(cleanHeight);
     setDraftHeight(cleanHeight);
     setIsEditing(false);
@@ -111,6 +127,7 @@ export function InteractiveEmbed() {
 
   const cancel = () => {
     setDraftCode(savedCode);
+    setDraftTitle(savedTitle);
     setDraftHeight(savedHeight);
     setIsEditing(false);
     setStatus('');
@@ -126,7 +143,7 @@ export function InteractiveEmbed() {
             </svg>
           </span>
           <div className="interactive-embed-heading">
-            <strong>Interactive Embed</strong>
+            <strong title={savedTitle}>{savedTitle}</strong>
             <span className="interactive-embed-subtitle">
               {isEditing ? 'Editing code' : isRunning ? 'Running' : 'Ready'}
             </span>
@@ -195,6 +212,17 @@ export function InteractiveEmbed() {
 
       {isEditing ? (
         <div className="interactive-embed-editor">
+          <label className="interactive-embed-title-field" htmlFor={`embed-title-${context?.remId || 'loading'}`}>
+            <span>Display title</span>
+            <input
+              id={`embed-title-${context?.remId || 'loading'}`}
+              type="text"
+              value={draftTitle}
+              onChange={(event) => setDraftTitle(event.target.value)}
+              maxLength={MAX_TITLE_LENGTH}
+              placeholder={DEFAULT_TITLE}
+            />
+          </label>
           <div className="interactive-embed-field-heading">
             <label htmlFor={`embed-code-${context?.remId || 'loading'}`}>Embed code</label>
             <span>HTML, CSS and JavaScript in one snippet</span>

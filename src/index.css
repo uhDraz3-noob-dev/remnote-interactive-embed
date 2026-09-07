@@ -242,6 +242,29 @@ body {
   background: var(--ie-surface);
 }
 
+.interactive-embed-title-field {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  color: var(--ie-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.interactive-embed-title-field input {
+  width: min(100%, 440px);
+  min-height: 40px;
+  border: 1px solid var(--ie-border);
+  border-radius: 9px;
+  padding: 8px 10px;
+  background: var(--ie-surface);
+  color: var(--ie-text);
+  font: inherit;
+  font-weight: 500;
+}
+
 .interactive-embed-field-heading {
   display: flex;
   align-items: baseline;
@@ -401,6 +424,12 @@ body {
 
   .interactive-embed-editor textarea {
     min-height: 220px;
+    font-size: 16px;
+  }
+
+  .interactive-embed-title-field input {
+    width: 100%;
+    min-height: 44px;
     font-size: 16px;
   }
 

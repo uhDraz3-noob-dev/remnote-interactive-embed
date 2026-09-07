@@ -1,7 +1,7 @@
 import { declareIndexPlugin, type ReactRNPlugin, WidgetLocation } from '@remnote/plugin-sdk';
 import '../style.css';
 import '../index.css';
-import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP } from '../constants';
+import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP, TITLE_SLOT } from '../constants';
 
 const SAMPLE_EMBED = `
 <div class="card">
@@ -57,6 +57,12 @@ async function onActivate(plugin: ReactRNPlugin) {
         {
           code: HEIGHT_SLOT,
           name: 'Embed height',
+          hidden: true,
+          onlyProgrammaticModifying: true,
+        },
+        {
+          code: TITLE_SLOT,
+          name: 'Display title',
           hidden: true,
           onlyProgrammaticModifying: true,
         },
