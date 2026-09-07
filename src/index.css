@@ -13,6 +13,16 @@
 }
 
 body {
+  padding: 0;
+}
+
+/*
+ * RemNote measures a parent of this stage when auto-sizing the widget.
+ * Keeping the breathing room on a nested element makes every edge part of
+ * the measured content in sandboxed and native rendering modes.
+ */
+.interactive-embed-stage {
+  width: 100%;
   padding: 10px;
 }
 
@@ -357,7 +367,7 @@ body {
 }
 
 @media (max-width: 560px) {
-  body {
+  .interactive-embed-stage {
     padding: 6px;
   }
 

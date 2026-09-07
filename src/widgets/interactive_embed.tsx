@@ -134,7 +134,8 @@ export function InteractiveEmbed() {
   };
 
   return (
-    <section className="interactive-embed-shell">
+    <div className="interactive-embed-stage">
+      <section className="interactive-embed-shell">
       <header className="interactive-embed-toolbar">
         <div className="interactive-embed-brand">
           <span className="interactive-embed-logo" aria-hidden="true">
@@ -306,7 +307,8 @@ export function InteractiveEmbed() {
           referrerPolicy="no-referrer"
         />
       ) : null}
-    </section>
+      </section>
+    </div>
   );
 }
 
