@@ -1,0 +1,37 @@
+<!-- Recommended embed height: 680px -->
+<!-- Requires Interactive Embed 0.3.0+ for 3D; interactive 2D fallback included. -->
+<main id="s3" data-interactive-embed="1">
+ <h2>Shape & perspective</h2><p>A flat outline hides depth. Choose a solid, then rotate it or look from another side.</p>
+ <div class="s3-row"><button id="s3-enable" type="button">Explore in 3D</button><button id="s3-flat" type="button" hidden>Return to 2D</button><button id="s3-reset" type="button">Reset</button></div>
+ <p id="s3-status" role="status">The 2D reference works without loading 3D.</p>
+ <div id="s3-stage" hidden></div>
+ <svg id="s3-fallback" viewBox="0 0 400 260" role="img" aria-label="Two-dimensional reference outline of the selected solid">
+  <g data-shape="box" fill="#3d8fb1" stroke="#b4f0ff" stroke-width="3"><path d="M100 90L230 45L310 98L180 145Z"/><path d="M100 90V180L180 235V145Z"/><path d="M180 145L310 98V190L180 235Z"/></g>
+  <circle data-shape="sphere" cx="200" cy="130" r="90" fill="#8356b1" stroke="#e2c3ff" stroke-width="4" hidden/>
+  <g data-shape="torus" fill="none" stroke="#e3b570" stroke-width="35" hidden><ellipse cx="200" cy="130" rx="110" ry="63"/></g>
+ </svg>
+ <div class="s3-row" aria-label="Choose a solid"><button data-select="box" type="button">Cube</button><button data-select="sphere" type="button">Sphere</button><button data-select="torus" type="button">Torus</button></div>
+ <div id="s3-camera" class="s3-row" hidden><button data-angle="0" type="button">Front</button><button data-angle="1.57" type="button">Side</button><button data-angle="3.14" type="button">Back</button><button id="s3-up" type="button">Above</button><button data-zoom="0.85" type="button">Zoom +</button><button data-zoom="1.18" type="button">Zoom −</button></div>
+ <p id="s3-observation"></p><small>Drag to orbit in 3D; use the view buttons without dragging. The reference illustrations are schematic, not live camera projections.</small>
+</main>
+<style>
+#s3{max-width:900px;margin:auto;padding:20px;border-radius:18px;background:#101c30;color:#eef7ff;font:16px/1.5 system-ui;color-scheme:dark}#s3 *{box-sizing:border-box}#s3 [hidden]{display:none!important}#s3 h2{margin:0;font-size:28px}#s3 .s3-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}#s3 button{min-height:44px;border:1px solid #60829b;border-radius:9px;padding:9px 12px;color:inherit;background:#254359;font:inherit;cursor:pointer}#s3 button[aria-pressed=true]{border-color:#90f6dc;background:#315e62}#s3 button:focus-visible{outline:3px solid #ffdb96;outline-offset:3px}#s3 #s3-stage{width:100%;height:330px;border-radius:12px;overflow:hidden}#s3 #s3-fallback{display:block;width:100%;height:260px}#s3 #s3-status,#s3 small{font-size:12px;color:#c0d4e5}@media(max-width:420px){#s3{padding:12px}#s3 #s3-stage{height:260px}}
+</style>
+<script>
+(function(){
+ const root=document.getElementById('s3'),ui=window.InteractiveEmbed,q=s=>root.querySelector(s);
+ if(!ui){q('#s3-status').textContent='This example needs the Interactive Embed runtime.';return;}
+ let stage=null,mesh=null,kit=null,disposed=false,ticket=0;
+ const descriptions={box:'Cube: rotation reveals faces that the front view hides.',sphere:'Sphere: its circular silhouette stays the same as you turn it.',torus:'Torus: the central opening becomes easier or harder to see as the view changes.'};
+ function fallback(message){if(stage)stage.dispose();stage=null;mesh=null;q('#s3-stage').hidden=q('#s3-camera').hidden=q('#s3-flat').hidden=true;q('#s3-fallback').toggleAttribute('hidden',false);q('#s3-enable').hidden=false;q('#s3-enable').disabled=false;q('#s3-status').textContent=message;}
+ function geometry(shape){const T=kit.THREE;return shape==='box'?new T.BoxGeometry(2,2,2):shape==='sphere'?new T.SphereGeometry(1.3,32,24):new T.TorusGeometry(1,.35,16,48);}
+ function draw(s){root.querySelectorAll('[data-select]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.select===s.shape)));root.querySelectorAll('[data-shape]').forEach(el=>{el.style.display=el.dataset.shape===s.shape?'':'none';el.removeAttribute('hidden');});q('#s3-observation').textContent=descriptions[s.shape];if(stage&&mesh){mesh.geometry.dispose();mesh.geometry=geometry(s.shape);mesh.material.color.setHex({box:0x3d8fb1,sphere:0x8356b1,torus:0xe3b570}[s.shape]);stage.render();}}
+ const state=ui.store({shape:'box'},draw);
+ ui.on(q('#s3-enable'),'click',async()=>{if(!ui.load3D){fallback('Update to Interactive Embed 0.3.0 for 3D; the 2D view remains available.');return;}const request=++ticket;q('#s3-enable').disabled=true;q('#s3-status').textContent='Loading packaged 3D…';try{kit=await ui.load3D();if(disposed||request!==ticket)return;q('#s3-stage').hidden=false;stage=kit.createStage(q('#s3-stage'),{label:'Rotatable solid. Use the view buttons as a keyboard alternative.',onUnavailable:fallback});mesh=new kit.THREE.Mesh(geometry(state.get().shape),new kit.THREE.MeshPhysicalMaterial({color:0x3d8fb1,roughness:.26,metalness:.15,clearcoat:.7}));stage.add(mesh);draw(state.get());q('#s3-fallback').toggleAttribute('hidden',true);q('#s3-enable').hidden=true;q('#s3-camera').hidden=q('#s3-flat').hidden=false;q('#s3-status').textContent='3D active · no automatic animation.';}catch(error){if(!disposed)fallback(error.message||'3D unavailable; use the 2D reference.');}});
+ ui.on(q('#s3-flat'),'click',()=>{ticket++;fallback('2D active; the graphics context has been released.');});
+ ui.on(root,'click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.select)state.set({shape:b.dataset.select});if(stage&&b.dataset.angle!==undefined)stage.setView(Number(b.dataset.angle),0);if(stage&&b.dataset.zoom)stage.zoom(Number(b.dataset.zoom));});
+ ui.on(q('#s3-up'),'click',()=>{if(stage)stage.setView(0,1.3);});
+ ui.on(q('#s3-reset'),'click',()=>{state.reset();if(stage)stage.resetCamera();});
+ if(ui.onDispose)ui.onDispose(()=>{disposed=true;ticket++;});
+})();
+</script>

@@ -1,17 +1,35 @@
 ---
 name: remnote-interactive-builder
-description: Turn a concept from the current conversation or user-supplied material into a single self-contained HTML/CSS/JavaScript learning interactive made to paste into Interactive Embed for RemNote. Use for interactive explanations, simulations, mind maps, process explorers, or paste-ready RemNote embed code; do not use for ordinary prose explanations or standalone websites.
+description: Turn a concept into one paste-ready HTML/CSS/JavaScript learning interactive for RemNote, choosing portable 2D or plugin-backed 3D to suit the learning objective. Use for interactive explanations, simulations, mind maps, process explorers, or RemNote embed code; do not use for ordinary prose explanations or standalone websites.
 ---
 
 # RemNote Interactive Builder
 
 Create one focused, paste-ready learning interaction from the concept the user has supplied or that was just explained in the conversation. If the concept and intended learner are already clear, proceed without asking the user to restate them.
 
-## Shape the interaction
+## Decide the learning experience before coding
 
-Identify the central learning objective and the few relationships, decisions, stages, or misconceptions the learner should actively explore. Prefer depth on one idea over a miniature textbook page. Preserve genuine uncertainty in the source material instead of inventing precision.
+Choose the simplest visual experience that makes the concept understandable. Add interaction, detail, or motion only when it improves what the learner can discover. A simple mind map can be the best final design; complexity is not a quality score.
 
-Choose the interaction that best exposes the concept's structure. When the choice is not obvious or the user requests alternatives, read [interaction-patterns.md](references/interaction-patterns.md).
+Keep conceptual scope simple without defaulting to visually basic execution. When spatial understanding or the user's visual ambition warrants it, design a scene with depth, lighting, materials, camera composition, selective reveal and direct object interaction. An immersive exhibit is different from a diagram beside a text dashboard. Do not add mechanisms solely to make the scene look sophisticated, and do not force 3D onto a clearer mind map.
+
+Identify the learning objective, not just the topic: what relationship, mechanism, distinction, or decision should become clear? The same topic may need a map for organization, a cutaway for spatial relationships, or a simulation for changing quantities. Prefer depth on one objective over a miniature textbook.
+
+Make three separate design decisions:
+
+- **Visual format:** choose a mind map, labeled diagram, spatial model, causal network, timeline, comparison, branching case, or another representation that exposes the objective. These are examples, not a closed menu or fixed topic-to-template mapping.
+- **Learner action:** choose what reveals understanding: expand, trace, compare, assemble, predict, step, stretch, block, or manipulate. Prefer acting on the represented object when useful, with accessible button/slider alternatives. Do not default every concept to sliders and dialogue boxes, or add busywork to an already clear map.
+- **Depth:** choose a simple view, an explorable view, a manipulable model, or a coordinated simulation. These are alternatives, not levels to climb. Visual richness and conceptual complexity are independent; broad topics may need focused scenes rather than one overloaded dashboard.
+
+Select a suitable design automatically when the objective is clear. Honor the user's chosen format and complexity; offer alternatives when requested or ask briefly if a missing objective would materially change the design. Do not make choosing from a menu a prerequisite for every generation. When the choice is not obvious or alternatives are requested, read [interaction-patterns.md](references/interaction-patterns.md).
+
+Use a visual-before-verbal check: without the explanatory paragraphs, can the learner still see the central relationship and, where applicable, what their action changed? Keep useful labels and numbers; use short explanations for what the visual cannot show. A changing number alone is insufficient when the mechanism can meaningfully be visualized. Abstract ideas may be clearest as labeled relationships, not physical metaphors.
+
+Start with one understandable scene and a clear invitation. Reveal secondary mechanisms, controls, explanations, or prediction challenges progressively when needed; do not require extra layers for a simple concept. Use 3D only when depth materially aids understanding and the device/performance budget permits it.
+
+Match the apparent realism to the model's validity. Preserve source uncertainty; label simplifications and distinguish a visual analogy from a quantitative or physiological simulation. Do not invent causal laws or imply clinical accuracy for visual effect.
+
+## Shape the selected experience
 
 Include:
 
@@ -29,13 +47,13 @@ Mark the single root `data-interactive-embed="1"`. Build a plain JSON state mode
 
 For complex requests, support linked views, scenario presets, progressive disclosure, zoom controls, prediction/feedback, and manual stepping where they help explain the same objective. Do not impose a two-pattern maximum when the user requests a richer tool. Read [spring-lab.html](assets/spring-lab.html) as a runnable example when using animation or Canvas; replace its concept and interface rather than always making a spring simulator.
 
-Return one self-contained HTML fragment with its `<style>` and `<script>` included. A complete HTML page is unnecessary. The result must work when pasted into the RemNote Interactive Embed plugin's editor.
+Return one HTML fragment with its `<style>` and `<script>` included. A complete HTML page is unnecessary. Portable 2D output remains self-contained. For plugin-backed 3D, first read [three-dimensional.md](references/three-dimensional.md) and [scene-3d.html](assets/scene-3d.html) completely. Use `ui.load3D()` and managed stages; construct concept-specific geometry with `kit.THREE`, or use documented asset IDs when a catalog model fits. The toolkit is general-purpose: do not default to hearts, medicine, or the demonstration's shapes. Never paste the engine itself. Include an interactive 2D fallback and an additional comment stating that 3D requires Interactive Embed 0.3.0+. Do not claim the 3D layer is standalone or guaranteed offline. Preserve the exact base runtime inline so the fallback works outside the new plugin too.
 
 Use a unique short prefix for every class and element ID so the snippet cannot collide with other content. Scope all CSS beneath one root container. Wrap JavaScript in an IIFE, query only inside that root, and attach behavior with `addEventListener`.
 
-Keep the snippet fully offline:
+Keep portable snippets fully offline; plugin-backed 3D may load its own bundled engine through the documented API, but no third-party resources:
 
-- no external libraries, fonts, images, analytics, network calls, or CDNs;
+- no author-added external libraries, fonts, images, analytics, network calls, or CDNs; the optional packaged 3D engine is the sole library-loading exception;
 - no `eval`, `new Function`, modules, imports, popups, alerts, form submission, or page navigation;
 - no cookies, `localStorage`, or assumptions about access to the parent RemNote page;
 - inline SVG is preferred for diagrams; Canvas supports animated simulations; optional WebGL requires a useful 2D/text fallback and Web Audio requires a user gesture and silent fallback;
@@ -73,6 +91,8 @@ Keep the plain JSON store small; keep large numeric buffers outside it. Update e
 
 Give the user one `html` fenced code block containing the complete paste-ready snippet. After it, add only one short sentence telling them to copy the code into **Edit → Embed code**, set the height shown in the first comment, save, and press **Run interactive**. Do not provide setup instructions, implementation commentary, or separate files unless requested.
 
-Before responding, check that the initial state renders without errors, every control changes something meaningful, Reset restores the initial state, text remains readable at phone width, and the snippet does not rely on capabilities blocked by the plugin sandbox.
+Before responding, check that the selected visual format serves the learning objective, its complexity earns its place, and the central relationship is visible rather than buried in explanatory panels. Also check that the initial state renders without errors, every control changes something meaningful, Reset restores the initial state, text remains readable at phone width, and the snippet does not rely on capabilities blocked by the plugin sandbox.
 
 For a complex interactive, test the final combined code inside an iframe with `sandbox="allow-scripts allow-presentation"` when browser testing is available. Check linked controls, reset after several changes, pointer cancellation, keyboard alternatives, narrow width, reduced motion, and console errors. Use an initial static draw and Step control so reduced motion still teaches the concept. Canvas must have a CSS height or aspect-ratio; avoid `100vh` and unbounded canvas resolutions. No loops or generated physics should block the main thread. If a test cannot be run, say so briefly and do not claim validation or that code will work every time. Standardization reduces failures; it cannot prove arbitrary generated code correct.
+
+For 3D, also test failed engine loading, unavailable graphics, context loss, on-demand/hidden rendering and repeated dispose/recreate. Keep controls useful in the fallback. Starter procedural assets are teaching abstractions, not clinically validated anatomy; high visual polish must not imply scientific fidelity the model does not have.

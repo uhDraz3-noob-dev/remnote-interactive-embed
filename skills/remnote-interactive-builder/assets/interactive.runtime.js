@@ -6,6 +6,9 @@
   const cleanups = new Set();
   let hostVisible = true;
   const visibilityListeners = new Set();
+  const engineUrl = window.__interactiveEmbed3DUrl;
+  let enginePromise = null;
+  let closed = false;
   window.addEventListener('message', function (event) {
     if (event.source !== window.parent || !event.data || event.data.type !== 'interactive-embed-visibility-v1' || typeof event.data.visible !== 'boolean') return;
     if (hostVisible === event.data.visible) return;
@@ -13,7 +16,8 @@
     visibilityListeners.forEach(function (sync) { sync(); });
   });
   function own(cleanup) {
-    const dispose = function () { cleanups.delete(dispose); cleanup(); };
+    let disposed = false;
+    const dispose = function () { if (disposed) return; disposed = true; cleanups.delete(dispose); cleanup(); };
     cleanups.add(dispose);
     return dispose;
   }
@@ -37,7 +41,39 @@
   }
   window.addEventListener('error', function (event) { if (event.message) report(event.message); });
   window.addEventListener('unhandledrejection', function (event) { report(event.reason || 'Unexpected error'); });
-  window.addEventListener('pagehide', function () { Array.from(cleanups).forEach(function (dispose) { dispose(); }); });
+  window.addEventListener('pagehide', function () { closed = true; Array.from(cleanups).forEach(function (dispose) { dispose(); }); });
+
+  function onVisibility(callback) {
+    const sync = function () { callback(hostVisible && !document.hidden); };
+    visibilityListeners.add(sync);
+    document.addEventListener('visibilitychange', sync);
+    const off = own(function () { visibilityListeners.delete(sync); document.removeEventListener('visibilitychange', sync); });
+    sync(); return off;
+  }
+
+  // Optional packaged engine; never requested by ordinary 2D snippets.
+  function load3D() {
+    if (closed) return Promise.reject(new Error('This interactive has stopped.'));
+    if (window.InteractiveEmbed3D && window.InteractiveEmbed3D.version === 1) return Promise.resolve(window.InteractiveEmbed3D);
+    if (enginePromise) return enginePromise;
+    if (typeof engineUrl !== 'string' || !/^https?:\/\//i.test(engineUrl)) return Promise.reject(new Error('3D requires Interactive Embed 0.3.0 or newer. Use the 2D view.'));
+    enginePromise = new Promise(function (resolve, reject) {
+      const script = document.createElement('script');
+      let settled = false, timer;
+      function finish(error) {
+        if (settled) return; settled = true; clearTimeout(timer);
+        script.onload = script.onerror = null; dispose();
+        if (error) reject(error); else resolve(window.InteractiveEmbed3D);
+      }
+      const dispose = own(function () { script.remove(); if (!settled) finish(new Error('3D loading was cancelled.')); });
+      script.src = engineUrl; script.async = true;
+      script.onload = function () { finish(window.InteractiveEmbed3D && window.InteractiveEmbed3D.version === 1 ? null : new Error('3D engine is unavailable.')); };
+      script.onerror = function () { finish(new Error('Could not load the packaged 3D engine. Use the 2D view or restart.')); };
+      timer = setTimeout(function () { finish(new Error('3D loading timed out. Use the 2D view or restart.')); }, 15000);
+      document.head.appendChild(script);
+    }).catch(function (error) { enginePromise = null; throw error; });
+    return enginePromise;
+  }
 
   function store(initial, render) {
     const copy = function (value) { return JSON.parse(JSON.stringify(value)); };
@@ -140,6 +176,8 @@
   }
   window.InteractiveEmbed = Object.freeze({
     version: 1, on: on, store: store, animate: animate, drag: drag, canvas: canvas,
+    load3D: load3D, onDispose: own, onVisibility: onVisibility,
+    get visible() { return hostVisible && !document.hidden; },
     clamp: function (value, min, max) { return Math.max(min, Math.min(max, value)); },
     get reducedMotion() { return motion.matches; }
   });
