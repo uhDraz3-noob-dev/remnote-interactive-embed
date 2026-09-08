@@ -9,6 +9,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const CopyPlugin = require('copy-webpack-plugin');
+const ThreeAssetPlugin = require('./scripts/three-asset-plugin.cjs');
 
 const isProd = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProd;
@@ -63,6 +64,7 @@ const config = {
     ],
   },
   plugins: [
+    new ThreeAssetPlugin(),
     isDevelopment
       ? undefined
       : new MiniCssExtractPlugin({
@@ -100,6 +102,7 @@ const config = {
       patterns: [
         { from: 'public', to: '' },
         { from: 'README.md', to: '' },
+        { from: 'node_modules/three/LICENSE', to: 'licenses/three-LICENSE.txt' },
       ],
     }),
     fastRefresh,

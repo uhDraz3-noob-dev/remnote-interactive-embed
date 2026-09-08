@@ -8,7 +8,7 @@ import {
 } from '@remnote/plugin-sdk';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CODE_SLOT, HEIGHT_SLOT, INTERACTIVE_EMBED_POWERUP, TITLE_SLOT } from '../constants';
-import { makeDocument } from '../embed-document';
+import { getEngineUrl, makeDocument } from '../embed-document';
 import '../style.css';
 import '../index.css';
 
@@ -94,9 +94,10 @@ export function InteractiveEmbed() {
     loadEmbed();
   });
 
+  const engineUrl = getEngineUrl(plugin.rootURL);
   const previewDocument = useMemo(
-    () => isRunning && !isCollapsed && !isEditing ? makeDocument(savedCode) : '',
-    [savedCode, isRunning, isCollapsed, isEditing]
+    () => isRunning && !isCollapsed && !isEditing ? makeDocument(savedCode, engineUrl) : '',
+    [savedCode, isRunning, isCollapsed, isEditing, engineUrl]
   );
 
   const save = async () => {
@@ -271,7 +272,7 @@ export function InteractiveEmbed() {
             </button>
           </div>
           <p id="interactive-embed-help" className="interactive-embed-help">
-            Paste your interactive code, save, then press Run. Diagrams, simulations, games, and touch controls are supported.
+            Paste your interactive code, save, then press Run. Diagrams, simulations, and optional plugin-backed 3D are supported. 3D snippets should include a lightweight fallback.
           </p>
         </div>
       ) : !isCollapsed && !isRunning ? (

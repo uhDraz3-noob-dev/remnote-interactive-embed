@@ -6,7 +6,7 @@ For portable output, inline the exact `src/runtime/interactive.runtime.js` file 
 
 ## Authoring contract
 
-Use a fragment with one root marked `data-interactive-embed="1"`, scoped CSS, inline SVG/Canvas as appropriate, and an IIFE script. Use JSON-serializable state, a central render function, explicit event listeners, and a Reset control. Recommended height goes in a leading HTML comment. No external dependencies are required or loaded by the runtime. The skill generates offline snippets; the host does not block all network requests in arbitrary pasted code.
+Use a fragment with one root marked `data-interactive-embed="1"`, scoped CSS, inline SVG/Canvas as appropriate, and an IIFE script. Use JSON-serializable state, a central render function, explicit event listeners, and a Reset control. Recommended height goes in a leading HTML comment. Ordinary 2D snippets require no external dependencies. Plugin 0.3.0 adds optional `load3D()`; it requests the separately packaged engine only when called. See [the 3D contract](interactive-3d-v1.md). The host does not block all network requests in arbitrary pasted code.
 
 | API | Contract |
 | --- | --- |
